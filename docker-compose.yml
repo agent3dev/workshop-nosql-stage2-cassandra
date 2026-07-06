@@ -1,0 +1,92 @@
+services:
+  cassandra1:
+    image: cassandra:4.1
+    container_name: discord_cassandra1
+    restart: unless-stopped
+    environment:
+      CASSANDRA_CLUSTER_NAME: discord_clone_cluster
+      CASSANDRA_SEEDS: cassandra1
+      CASSANDRA_DC: dc1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra1_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+
+  cassandra2:
+    image: cassandra:4.1
+    container_name: discord_cassandra2
+    restart: unless-stopped
+    environment:
+      CASSANDRA_CLUSTER_NAME: discord_clone_cluster
+      CASSANDRA_SEEDS: cassandra1
+      CASSANDRA_DC: dc1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    depends_on:
+      cassandra1:
+        condition: service_healthy
+    volumes:
+      - cassandra2_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+
+  # cassandra2/3 are chained (not both depending on cassandra1 directly)
+  # because starting two Cassandra nodes at the same instant causes a
+  # bootstrap token collision -- nodes must join the cluster one at a time.
+  cassandra3:
+    image: cassandra:4.1
+    container_name: discord_cassandra3
+    restart: unless-stopped
+    environment:
+      CASSANDRA_CLUSTER_NAME: discord_clone_cluster
+      CASSANDRA_SEEDS: cassandra1
+      CASSANDRA_DC: dc1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    depends_on:
+      cassandra2:
+        condition: service_healthy
+    volumes:
+      - cassandra3_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+
+  init:
+    image: cassandra:4.1
+    container_name: discord_cassandra_init
+    depends_on:
+      cassandra3:
+        condition: service_healthy
+    volumes:
+      - ./init:/init
+    entrypoint:
+      - bash
+      - -c
+      - |
+        cqlsh cassandra1 -f /init/00_schema.cql &&
+        cqlsh cassandra1 -f /init/01_seed.cql &&
+        echo "INIT DONE"
+
+volumes:
+  cassandra1_data:
+  cassandra2_data:
+  cassandra3_data:

@@ -1,0 +1,24 @@
+-- D1. "Server ownership transfer" (or any account/permissions change)
+-- is a good candidate for stronger consistency -- QUORUM or even ALL
+-- on both the write and subsequent reads. Unlike a chat message (where
+-- a few seconds of staleness is invisible to users), two admins
+-- racing to transfer ownership and getting inconsistent answers about
+-- who currently owns the server is a real correctness/security bug,
+-- not just a UX blemish.
+
+-- D2. With RF=3, QUORUM means "at least 2 of the 3 replicas." A write
+-- at QUORUM lands on some 2-of-3 set; a read at QUORUM checks some
+-- other 2-of-3 set. With only 3 replicas total, any two size-2 subsets
+-- of a 3-element set MUST share at least one element (2 + 2 = 4 > 3,
+-- so by pigeonhole they overlap by at least 1). That shared replica is
+-- guaranteed to have seen the write, so the read is guaranteed to see
+-- it too (Cassandra also reconciles using per-column timestamps across
+-- whichever replicas the read does hit).
+
+-- D3. With cassandra2 AND cassandra3 stopped, only 1 of 3 replicas is
+-- reachable. QUORUM for RF=3 requires 2 responses -- with only 1 node
+-- up, that's impossible, so QUORUM reads/writes fail with
+-- "Cannot achieve consistency level QUORUM". Only CONSISTENCY ONE
+-- still succeeds, since exactly 1 replica is available. This is the
+-- concrete version of "quorum = majority" -- losing 2 of 3 nodes loses
+-- the majority, no matter which 2 you lose.
