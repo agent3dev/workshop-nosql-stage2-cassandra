@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: 13.333in 7.5in; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Helvetica, Arial, sans-serif;
+    color: #10131a;
+  }
+  .slide {
+    width: 13.333in;
+    height: 7.5in;
+    page-break-after: always;
+    padding: 0.75in 1in;
+    position: relative;
+    overflow: hidden;
+  }
+  .slide:last-child { page-break-after: auto; }
+
+  .slide.dark {
+    background: #10131a;
+    color: #ffffff;
+  }
+  .slide.light {
+    background: #ffffff;
+    color: #10131a;
+  }
+
+  .accent { color: #5865f2; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 15px;
+    font-weight: 700;
+    color: #5865f2;
+    margin-bottom: 18px;
+  }
+  .dark .eyebrow { color: #7a85ff; }
+  .light .eyebrow { color: #4752c4; }
+
+  h1 {
+    font-size: 46px;
+    line-height: 1.15;
+    margin: 0 0 10px 0;
+  }
+  h2 {
+    font-size: 34px;
+    margin: 0 0 30px 0;
+  }
+  .subtitle {
+    font-size: 20px;
+    opacity: 0.85;
+    margin: 0;
+  }
+
+  ul.points {
+    font-size: 22px;
+    line-height: 1.6;
+    padding-left: 28px;
+    margin: 0;
+  }
+  ul.points li { margin-bottom: 14px; }
+  ul.points li b { color: #4752c4; }
+  .dark ul.points li b { color: #7a85ff; }
+
+  .center-stack {
+    position: absolute;
+    top: 50%;
+    left: 1in;
+    right: 1in;
+    transform: translateY(-50%);
+  }
+
+  .quote {
+    font-size: 26px;
+    font-style: italic;
+    line-height: 1.5;
+    border-left: 5px solid #5865f2;
+    padding-left: 24px;
+    margin: 26px 0;
+  }
+  .cite {
+    font-size: 15px;
+    opacity: 0.7;
+  }
+
+  table.roadmap {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 18px;
+  }
+  table.roadmap th {
+    text-align: left;
+    color: #4752c4;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 2px solid #4752c4;
+    padding: 8px 12px 10px 0;
+  }
+  table.roadmap td {
+    padding: 16px 12px 16px 0;
+    border-bottom: 1px solid #dcdfef;
+    vertical-align: top;
+  }
+  table.roadmap td.num {
+    font-weight: 700;
+    color: #4752c4;
+    font-size: 20px;
+    width: 50px;
+  }
+  table.roadmap td.file {
+    font-family: "Courier New", monospace;
+    font-size: 15px;
+    color: #444;
+    width: 240px;
+  }
+
+  .footer-tag {
+    position: absolute;
+    bottom: 0.5in;
+    left: 1in;
+    right: 1in;
+    font-size: 14px;
+    opacity: 0.6;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .badge-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 34px;
+  }
+  .badge {
+    background: rgba(88,101,242,0.15);
+    border: 1px solid #7a85ff;
+    color: #b7bcff;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .two-col {
+    display: flex;
+    gap: 60px;
+    margin-top: 20px;
+  }
+  .two-col > div { flex: 1; }
+  .col-label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .col-label.old { color: #8a8a8a; }
+  .col-label.new { color: #4752c4; }
+
+  code.inline {
+    background: #eef0fb;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 17px;
+    font-family: "Courier New", monospace;
+    color: #4752c4;
+  }
+  .dark code.inline {
+    background: rgba(122,133,255,0.18);
+    color: #c7cbff;
+  }
+
+  .split {
+    display: flex;
+    gap: 44px;
+    margin-top: 22px;
+    align-items: flex-start;
+  }
+  .split .split-left { flex: 0 0 44%; }
+  .split .split-right { flex: 1; padding-top: 2px; }
+  .split ul.points { font-size: 19px; }
+  .split ul.points li { margin-bottom: 16px; }
+
+  .code-card {
+    background: #10131a;
+    border-radius: 10px;
+    padding: 20px 24px;
+    font-family: "Courier New", monospace;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #d8dcff;
+  }
+  .code-card .tag {
+    display: inline-block;
+    font-family: Helvetica, Arial, sans-serif;
+    background: #5865f2;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .code-card .hl { color: #8b93ff; font-weight: 700; }
+  .code-card .cm { color: #7a7f97; font-style: italic; }
+  .code-card .bad { color: #ff8383; }
+  .code-card .ok { color: #7ee2a8; }
+</style>
+</head>
+<body>
+
+  <!-- SLIDE 1: TITLE -->
+  <div class="slide dark">
+    <div class="center-stack">
+      <div class="eyebrow">NextGen Python Internship MX &middot; Q2 2026 &middot; Stage 2</div>
+      <h1>Workshop NoSQL DB<br><span class="accent">Cassandra</span></h1>
+      <p class="subtitle">Case study: how Discord stores trillions of chat messages</p>
+      <div class="badge-row">
+        <div class="badge">Follow-along session</div>
+        <div class="badge">Hands-on, all levels welcome</div>
+      </div>
+    </div>
+    <div class="footer-tag">
+      <span>Stage 2 &middot; Workshop 2 of 2</span>
+      <span>github.com/agent3dev/workshop-nosql-stage2-cassandra</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: TWO FLAVORS OF NOSQL -->
+  <div class="slide light">
+    <div class="eyebrow">Two flavors of NoSQL</div>
+    <h2>Documents got you here. Distribution gets you further.</h2>
+    <div class="two-col">
+      <div>
+        <div class="col-label old">Workshop 1 &middot; MongoDB</div>
+        <ul class="points">
+          <li>Flexible <b>documents</b>, varying shape</li>
+          <li>Runs great on a single node</li>
+          <li>Relationships: <b>embed</b> or <b>reference</b></li>
+          <li>Query however you like, mostly</li>
+        </ul>
+      </div>
+      <div>
+        <div class="col-label new">Workshop 2 &middot; Cassandra</div>
+        <ul class="points">
+          <li><b>Distributed by design</b> &mdash; built for many nodes</li>
+          <li>Every table is designed around <b>one query</b></li>
+          <li>Data lives where its <b>partition key</b> says it does</li>
+          <li>You choose consistency vs. availability, per query</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: THE REAL PROBLEM -->
+  <div class="slide light">
+    <div class="eyebrow">The real problem &middot; Discord</div>
+    <h2>Storing trillions of chat messages</h2>
+    <ul class="points">
+      <li>Discord's core read: <b>"last 50 messages in this channel, newest first"</b> &mdash; needed to be fast, always, at massive scale</li>
+      <li>Their real production table partitioned by channel alone &mdash; every message in one channel, forever, in ONE partition</li>
+      <li>Their largest channels eventually grew that partition big enough to cause <b>cluster-wide latency</b> &mdash; a real postmortem, not a hypothetical</li>
+    </ul>
+    <div class="quote">
+      &ldquo;Lots of concurrent reads as users interact with servers can hotspot a partition... when Discord encountered a hot partition, it frequently affected latency across the entire database cluster.&rdquo;
+    </div>
+    <div class="cite">&mdash; Discord Engineering: discord.com/blog/how-discord-stores-trillions-of-messages</div>
+  </div>
+
+  <!-- SLIDE 4: TODAY'S ROADMAP -->
+  <div class="slide light">
+    <div class="eyebrow">Today, we rebuild it</div>
+    <h2>Curriculum roadmap</h2>
+    <table class="roadmap">
+      <tr><th>#</th><th>File</th><th>SQL &middot; Stage 1</th><th>Cassandra &middot; today</th></tr>
+      <tr>
+        <td class="num">01</td>
+        <td class="file">01_crud.cql</td>
+        <td>SELECT / INSERT / UPDATE / DELETE, JOINs</td>
+        <td>Same verbs &mdash; but partition-key reads only, no JOIN</td>
+      </tr>
+      <tr>
+        <td class="num">02</td>
+        <td class="file">02_data_modeling.cql</td>
+        <td>Normalize, then JOIN to assemble an answer</td>
+        <td>Denormalize: <b>one table per query</b>, built up front</td>
+      </tr>
+      <tr>
+        <td class="num">03</td>
+        <td class="file">03_partitions_clustering.cql</td>
+        <td>Not really a schema concern on one node</td>
+        <td>Partition key design determines scale &amp; hotspots</td>
+      </tr>
+      <tr>
+        <td class="num">04</td>
+        <td class="file">04_cql_consistency.cql</td>
+        <td>Single-node ACID transactions</td>
+        <td>Tunable per query: <code class="inline">ONE</code> / <code class="inline">QUORUM</code> / <code class="inline">ALL</code></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- SLIDE 5: FILE 1 -->
+  <div class="slide light">
+    <div class="eyebrow">File 1 of 4 &middot; 01_crud.cql</div>
+    <h2>CRUD basics: same verbs, different rules</h2>
+    <div class="two-col">
+      <div>
+        <div class="col-label old">SQL &middot; Stage 1 (Postgres)</div>
+        <div class="code-card">
+          <span class="tag" style="background:#607086;">SQL</span><br>
+          SELECT c.name, s.name<br>
+          FROM channels c<br>
+          JOIN servers s<br>
+          &nbsp;&nbsp;ON c.server_id = s.id<br>
+          WHERE s.id = 'aaaa...';<br>
+          <span class="ok">-- JOIN resolves the relationship</span><br>
+          <span class="ok">-- filter on any column, freely</span>
+        </div>
+      </div>
+      <div>
+        <div class="col-label new">CQL &middot; Cassandra (today)</div>
+        <div class="code-card">
+          <span class="tag">CQL</span><br>
+          SELECT * FROM channels<br>
+          WHERE server_id = aaaa...;<br>
+          <span class="bad">-- FAILS: server_id isn't the key</span><br>
+          <span class="hl">-- needs ALLOW FILTERING</span><br>
+          <br>
+          <span class="cm">-- and there is no JOIN. Ever.</span>
+        </div>
+      </div>
+    </div>
+    <ul class="points" style="margin-top: 26px;">
+      <li>This "refusal" isn't a limitation to work around &mdash; it's the setup for file 2's real lesson</li>
+    </ul>
+  </div>
+
+  <!-- SLIDE 6: FILE 2 -->
+  <div class="slide light">
+    <div class="eyebrow">File 2 of 4 &middot; 02_data_modeling.cql</div>
+    <h2>Data modeling: one table per query</h2>
+    <div class="split">
+      <div class="split-left">
+        <ul class="points">
+          <li>Naive table keyed by <code class="inline">message_id</code> alone &mdash; "messages in this channel" needs a full cluster scan</li>
+          <li>Redesign: partition by channel, cluster by time, newest first</li>
+          <li>A different query = a different table &mdash; duplicating data on write is normal here, not a bug</li>
+          <li>This is Discord's actual schema, not a simplification</li>
+        </ul>
+      </div>
+      <div class="split-right">
+        <div class="code-card">
+          <span class="tag">CQL</span><br>
+          <span class="cm">-- naive: no query is fast</span><br>
+          PRIMARY KEY (message_id)<br>
+          <br>
+          <span class="cm">-- query-first: Discord's real schema</span><br>
+          PRIMARY KEY<br>
+          &nbsp;&nbsp;<span class="hl">(channel_id, message_id)</span><br>
+          <span class="cm">-- partition=channel, cluster=time</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: FILE 3 -->
+  <div class="slide light">
+    <div class="eyebrow">File 3 of 4 &middot; 03_partitions_clustering.cql</div>
+    <h2>Partitions &amp; the hot-partition problem</h2>
+    <div class="split">
+      <div class="split-left">
+        <ul class="points">
+          <li>Load thousands of messages into ONE channel &mdash; <code class="inline">nodetool tablestats</code> shows a single, huge partition</li>
+          <li>The real fix: add a time <code class="inline">bucket</code> to the partition key</li>
+          <li>Same data, 10 smaller partitions instead of 1 &mdash; visible live in the stats, not just claimed</li>
+          <li>The cost: reads now need to know which bucket(s) to check</li>
+        </ul>
+      </div>
+      <div class="split-right">
+        <div class="code-card">
+          <span class="tag">CQL</span><br>
+          <span class="cm">-- one giant partition per channel</span><br>
+          PRIMARY KEY<br>
+          &nbsp;&nbsp;(channel_id, message_id)<br>
+          <br>
+          <span class="cm">-- bucketed: caps partition size</span><br>
+          PRIMARY KEY (<br>
+          &nbsp;&nbsp;<span class="hl">(channel_id, bucket)</span>,<br>
+          &nbsp;&nbsp;message_id<br>
+          )<br>
+          <span class="hl">&nbsp;&nbsp;&#8593; the extra ( ) is the fix</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: FILE 4 -->
+  <div class="slide light">
+    <div class="eyebrow">File 4 of 4 &middot; 04_cql_consistency.cql</div>
+    <h2>CQL consistency levels</h2>
+    <div class="split">
+      <div class="split-left">
+        <ul class="points">
+          <li>Real 3-node cluster, replication factor 3 &mdash; not a simulation</li>
+          <li><code class="inline">CONSISTENCY ONE / QUORUM / ALL</code> &mdash; how many replicas must answer</li>
+          <li>We kill a node live: <b>ALL</b> breaks immediately, <b>QUORUM</b> and <b>ONE</b> keep working</li>
+          <li>The tradeoff Discord makes every day: availability and speed over perfect consistency</li>
+        </ul>
+      </div>
+      <div class="split-right">
+        <div class="code-card">
+          <span class="tag">CQLSH</span><br>
+          CONSISTENCY QUORUM;<br>
+          SELECT * FROM users WHERE ...;<br>
+          <span class="ok">-- OK, 2 of 3 replicas answer</span><br>
+          <br>
+          <span class="cm">-- (kill one node)</span><br>
+          CONSISTENCY ALL;<br>
+          SELECT * FROM users WHERE ...;<br>
+          <span class="bad">-- Cannot achieve consistency ALL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: HOW THIS SESSION WORKS -->
+  <div class="slide light">
+    <div class="eyebrow">Format</div>
+    <h2>How today works</h2>
+    <ul class="points">
+      <li>This is a <b>follow-along-with-teacher</b> session, not a self-paced tutorial</li>
+      <li>Some of you will type every command with me &mdash; others will watch and jump in on the open challenges. <b>Both are fine.</b></li>
+      <li>Each file ends with take-home challenges &mdash; we may not finish everything live, and that's expected</li>
+      <li>Ask questions any time &mdash; we'll pause</li>
+    </ul>
+  </div>
+
+  <!-- SLIDE 10: BEFORE WE START -->
+  <div class="slide dark">
+    <div class="eyebrow">Before we start</div>
+    <h2>Get the cluster running</h2>
+    <ul class="points">
+      <li><code class="inline">git clone github.com/agent3dev/workshop-nosql-stage2-cassandra</code></li>
+      <li><code class="inline">docker compose up -d</code> &mdash; a real 3-node cluster, takes a few minutes to boot</li>
+      <li>Check it's ready: <code class="inline">docker exec discord_cassandra1 nodetool status</code></li>
+      <li>Connect: <code class="inline">docker exec -it discord_cassandra1 cqlsh</code></li>
+    </ul>
+    <div class="footer-tag">
+      <span>Full setup steps are in the repo README</span>
+      <span></span>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: CLOSING -->
+  <div class="slide dark">
+    <div class="center-stack">
+      <div class="eyebrow">Let's build</div>
+      <h1>Rebuilding <span class="accent">Discord's message store</span>,<br>one exercise at a time</h1>
+      <p class="subtitle">github.com/agent3dev/workshop-nosql-stage2-cassandra</p>
+    </div>
+  </div>
+
+</body>
+</html>
