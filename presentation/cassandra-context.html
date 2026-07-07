@@ -174,6 +174,32 @@
     color: #c7cbff;
   }
 
+  ul.checklist { list-style: none; padding-left: 0; }
+  ul.checklist li {
+    position: relative;
+    padding-left: 38px;
+  }
+  ul.checklist li:before {
+    content: "\2713";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #5865f2;
+    font-weight: 700;
+    font-size: 22px;
+  }
+
+  .verdict {
+    margin-top: 26px;
+    background: rgba(88,101,242,0.08);
+    border: 1px solid #5865f2;
+    border-radius: 10px;
+    padding: 16px 22px;
+    font-size: 19px;
+    font-weight: 600;
+    color: #2f3a8f;
+  }
+
   .split {
     display: flex;
     gap: 44px;
@@ -256,6 +282,8 @@
         </ul>
       </div>
     </div>
+    <div class="verdict">Narrow by design, so it can be fast at any scale.</div>
+    <div class="cite">Fun fact: Discord actually lived this exact journey &mdash; MongoDB in 2015, outgrown around 100 million messages, migrated to Cassandra in 2017.</div>
   </div>
 
   <!-- SLIDE 3: THE REAL PROBLEM -->
@@ -278,71 +306,154 @@
     <div class="eyebrow">Today, we rebuild it</div>
     <h2>Curriculum roadmap</h2>
     <table class="roadmap">
-      <tr><th>#</th><th>File</th><th>SQL &middot; previous workshop</th><th>Cassandra &middot; today</th></tr>
+      <tr><th>#</th><th>File</th><th>SQL principle</th><th>Cassandra principle</th></tr>
       <tr>
         <td class="num">01</td>
         <td class="file">01_crud.cql</td>
-        <td>SELECT / INSERT / UPDATE / DELETE, JOINs</td>
-        <td>Same verbs &mdash; but partition-key reads only, no JOIN</td>
+        <td>The engine adapts to whatever question you ask</td>
+        <td>You must know your question before you design the table</td>
       </tr>
       <tr>
         <td class="num">02</td>
         <td class="file">02_data_modeling.cql</td>
-        <td>Normalize, then JOIN to assemble an answer</td>
-        <td>Denormalize: <b>one table per query</b>, built up front</td>
+        <td>Model the <b>entities</b>; normalize to avoid duplication</td>
+        <td>Model the <b>queries</b>; duplicate data freely on write</td>
       </tr>
       <tr>
         <td class="num">03</td>
         <td class="file">03_partitions_clustering.cql</td>
-        <td>Not really a schema concern on one node</td>
-        <td>Partition key design determines scale &amp; hotspots</td>
+        <td>Physical storage is the engine's problem, not yours</td>
+        <td>Where data physically lives is a design decision you own</td>
       </tr>
       <tr>
         <td class="num">04</td>
         <td class="file">04_cql_consistency.cql</td>
-        <td>Single-node ACID transactions</td>
-        <td>Tunable per query: <code class="inline">ONE</code> / <code class="inline">QUORUM</code> / <code class="inline">ALL</code></td>
+        <td>One machine, one truth &mdash; consistency by default</td>
+        <td>Many machines &mdash; you choose consistency vs. availability</td>
       </tr>
     </table>
   </div>
 
-  <!-- SLIDE 5: FILE 1 -->
+  <!-- SLIDE 5: WHEN TO ACTUALLY PITCH IT -->
+  <div class="slide light">
+    <div class="eyebrow">Beyond today's session</div>
+    <h2>Pitching Cassandra to a real project</h2>
+    <ul class="points" style="margin-bottom: 10px;">
+      <li>Not "better modeling" &mdash; a narrower bet: you have a problem SQL can't solve on one machine, and you already know your access patterns</li>
+    </ul>
+    <ul class="points checklist">
+      <li><b>Write volume</b> that outgrows a single Postgres instance &mdash; thousands of writes/sec, sustained</li>
+      <li><b>Data volume</b> bigger than one server can hold, growing continuously (logs, events, messages)</li>
+      <li><b>Multi-datacenter</b> &mdash; no single point of failure, survives losing an entire data center</li>
+      <li><b>Known, stable access patterns</b> &mdash; not ad-hoc analyst queries</li>
+      <li><b>Tolerance for eventual consistency</b> on at least some of the data</li>
+    </ul>
+    <div class="verdict">Fewer than 2&ndash;3 of these? Plain SQL is still the right call.</div>
+  </div>
+
+  <!-- SLIDE 6: BEYOND DISCORD -->
+  <div class="slide light">
+    <div class="eyebrow">Beyond today's session</div>
+    <h2>Who else runs on this exact pattern</h2>
+    <ul class="points">
+      <li><b>Discord</b> &mdash; trillions of chat messages, partitioned by channel &amp; time bucket (today's whole case study)</li>
+      <li><b>IoT / sensor telemetry</b> &mdash; device readings partitioned by <code class="inline">device_id + day</code>, clustered by timestamp. Same exact shape as today's <code class="inline">messages_by_channel_bucketed</code> table, just device readings instead of chat messages.</li>
+      <li><b>Netflix</b> &mdash; viewing history &amp; billing: hundreds of Cassandra clusters, tens of thousands of nodes, petabytes of data, millions of ops/sec</li>
+      <li><b>Apple</b> &mdash; 75,000+ Cassandra nodes, 10+ petabytes of data, one single cluster over 1,000 nodes</li>
+    </ul>
+    <div class="cite">Sources: Netflix Technology Blog; Apple's public Cassandra Summit disclosures (planetcassandra.org, cassandra.apache.org case studies)</div>
+  </div>
+
+  <!-- SLIDE 7: WHAT CASSANDRA IS NOT -->
+  <div class="slide light">
+    <div class="eyebrow">Common misconceptions</div>
+    <h2>What Cassandra is NOT</h2>
+    <ul class="points">
+      <li><b>Not a SQL view.</b> A view computes a query live over one source of truth &mdash; nothing is duplicated. Cassandra's "one table per query" is closer to a <b>materialized view</b>: the data is physically stored, shaped for that query. The difference that matters &mdash; a materialized view is kept in sync by the database engine automatically; here, <b>your application</b> writes to every relevant table itself, on every insert. Nobody does that for you.</li>
+      <li><b>Not ACID.</b> A single write to one row (one partition) is atomic and durable &mdash; that part is solid. But there are no transactions across multiple partitions or tables, no foreign keys, no rollback spanning several writes. And the "C" in <code class="inline">ONE / QUORUM / ALL</code> means <i>replica</i> consistency &mdash; how many copies agree &mdash; not the ACID "C" of enforced data invariants.</li>
+    </ul>
+  </div>
+
+  <!-- SLIDE 8: SURVIVING A DATACENTER FAILURE -->
+  <div class="slide light">
+    <div class="eyebrow">Beyond today's session</div>
+    <h2>Surviving an entire datacenter failure, in practice</h2>
+    <ul class="points">
+      <li><code class="inline">NetworkTopologyStrategy</code> replicates <b>per datacenter</b> &mdash; e.g. <code class="inline">{dc1: 3, dc2: 3}</code>. Every write goes to both DCs.</li>
+      <li>Your app reads/writes at <code class="inline">LOCAL_QUORUM</code> &mdash; quorum <b>within your own DC only</b>. It never waits on the far DC.</li>
+      <li>If DC2 disappears entirely, clients talking to DC1 at <code class="inline">LOCAL_QUORUM</code> don't even notice.</li>
+      <li>The level to avoid here is <code class="inline">EACH_QUORUM</code> &mdash; it requires every DC to answer, so a dead DC breaks it outright.</li>
+      <li>When DC2 comes back: <b>hinted handoff</b> replays what it missed (short outages), or <code class="inline">nodetool repair</code> resyncs it (long outages).</li>
+    </ul>
+    <div class="verdict">Same mechanism as Exercise 4's node-kill demo &mdash; just imagine the nodes you kill all live in the same building.</div>
+  </div>
+
+  <!-- SLIDE 9: HOW CASSANDRA COMPARES -->
+  <div class="slide light">
+    <div class="eyebrow">Beyond today's session</div>
+    <h2>How Cassandra compares</h2>
+    <table class="roadmap">
+      <tr><th>System</th><th>Coordination</th><th>Consistency</th><th>Best for</th></tr>
+      <tr>
+        <td class="file">Cassandra</td>
+        <td>No leader &mdash; gossip + peer nodes</td>
+        <td>Tunable per query</td>
+        <td>Fast known-key lookups at massive write scale</td>
+      </tr>
+      <tr>
+        <td class="file">DynamoDB</td>
+        <td>No leader &mdash; same lineage as Cassandra</td>
+        <td>Tunable, fully managed by AWS</td>
+        <td>Same model, zero operations</td>
+      </tr>
+      <tr>
+        <td class="file">CockroachDB / Spanner</td>
+        <td>Leader per range (Raft / Paxos)</td>
+        <td>Strong (serializable) by default</td>
+        <td>Cross-node JOINs &amp; real transactions</td>
+      </tr>
+      <tr>
+        <td class="file">Elasticsearch</td>
+        <td>Elected master (cluster state)</td>
+        <td>Primary-then-replica, per shard</td>
+        <td>Full-text search &amp; aggregations, not OLTP lookups</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- SLIDE 10: FILE 1 -->
   <div class="slide light">
     <div class="eyebrow">File 1 of 4 &middot; 01_crud.cql</div>
-    <h2>CRUD basics: same verbs, different rules</h2>
+    <h2>CRUD basics: two design philosophies</h2>
     <div class="two-col">
       <div>
-        <div class="col-label old">SQL (Postgres, previous workshop)</div>
-        <div class="code-card">
-          <span class="tag" style="background:#607086;">SQL</span><br>
-          SELECT c.name, s.name<br>
-          FROM channels c<br>
-          JOIN servers s<br>
-          &nbsp;&nbsp;ON c.server_id = s.id<br>
-          WHERE s.id = 'aaaa...';<br>
-          <span class="ok">-- JOIN resolves the relationship</span><br>
-          <span class="ok">-- filter on any column, freely</span>
-        </div>
+        <div class="col-label old">SQL (previous workshop)</div>
+        <ul class="points">
+          <li>The engine adapts to <b>whatever question</b> you ask</li>
+          <li>Schema comes first; queries adapt to it later, freely</li>
+        </ul>
       </div>
       <div>
-        <div class="col-label new">CQL &middot; Cassandra (today)</div>
-        <div class="code-card">
-          <span class="tag">CQL</span><br>
-          SELECT * FROM channels<br>
-          WHERE server_id = aaaa...;<br>
-          <span class="bad">-- FAILS: server_id isn't the key</span><br>
-          <span class="hl">-- needs ALLOW FILTERING</span><br>
-          <br>
-          <span class="cm">-- and there is no JOIN. Ever.</span>
-        </div>
+        <div class="col-label new">Cassandra (today)</div>
+        <ul class="points">
+          <li>You must know <b>your query</b> before you design the table</li>
+          <li>No JOIN, no ad-hoc filtering &mdash; the table IS the query</li>
+        </ul>
       </div>
     </div>
-    <ul class="points" style="margin-top: 26px;">
+    <div class="code-card" style="margin-top: 24px;">
+      <span class="tag">CQL</span><br>
+      SELECT * FROM channels<br>
+      WHERE server_id = aaaa...;<br>
+      <span class="bad">-- FAILS: server_id isn't the partition key</span><br>
+      <span class="hl">-- needs ALLOW FILTERING &mdash; and even then, it's a full scan</span>
+    </div>
+    <ul class="points" style="margin-top: 18px;">
       <li>This "refusal" isn't a limitation to work around &mdash; it's the setup for file 2's real lesson</li>
     </ul>
   </div>
 
-  <!-- SLIDE 6: FILE 2 -->
+  <!-- SLIDE 11: FILE 2 -->
   <div class="slide light">
     <div class="eyebrow">File 2 of 4 &middot; 02_data_modeling.cql</div>
     <h2>Data modeling: one table per query</h2>
@@ -370,7 +481,7 @@
     </div>
   </div>
 
-  <!-- SLIDE 7: FILE 3 -->
+  <!-- SLIDE 12: FILE 3 -->
   <div class="slide light">
     <div class="eyebrow">File 3 of 4 &middot; 03_partitions_clustering.cql</div>
     <h2>Partitions &amp; the hot-partition problem</h2>
@@ -401,7 +512,7 @@
     </div>
   </div>
 
-  <!-- SLIDE 8: FILE 4 -->
+  <!-- SLIDE 13: FILE 4 -->
   <div class="slide light">
     <div class="eyebrow">File 4 of 4 &middot; 04_cql_consistency.cql</div>
     <h2>CQL consistency levels</h2>
@@ -430,19 +541,7 @@
     </div>
   </div>
 
-  <!-- SLIDE 9: HOW THIS SESSION WORKS -->
-  <div class="slide light">
-    <div class="eyebrow">Format</div>
-    <h2>How today works</h2>
-    <ul class="points">
-      <li>This is a <b>follow-along-with-teacher</b> session, not a self-paced tutorial</li>
-      <li>Some of you will type every command with me &mdash; others will watch and jump in on the open challenges. <b>Both are fine.</b></li>
-      <li>Each file ends with take-home challenges &mdash; we may not finish everything live, and that's expected</li>
-      <li>Ask questions any time &mdash; we'll pause</li>
-    </ul>
-  </div>
-
-  <!-- SLIDE 10: BEFORE WE START -->
+  <!-- SLIDE 14: BEFORE WE START -->
   <div class="slide dark">
     <div class="eyebrow">Before we start</div>
     <h2>Get the cluster running</h2>
@@ -458,14 +557,6 @@
     </div>
   </div>
 
-  <!-- SLIDE 11: CLOSING -->
-  <div class="slide dark">
-    <div class="center-stack">
-      <div class="eyebrow">Let's build</div>
-      <h1>Rebuilding <span class="accent">Discord's message store</span>,<br>one exercise at a time</h1>
-      <p class="subtitle">github.com/agent3dev/workshop-nosql-stage2-cassandra</p>
-    </div>
-  </div>
 
 </body>
 </html>
